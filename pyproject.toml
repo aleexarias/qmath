@@ -46,7 +46,7 @@ docs = [
     "sphinx-gallery>=0.14",
     "numpydoc>=1.6",
     "matplotlib>=3.8",
-    "sphinxcontrib-bibtex>=2.6",
+    "sphinxcontrib-bibtex>=2.7.0",
 ]
 
 [project.urls]
