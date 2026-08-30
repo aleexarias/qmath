@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: 'qmath: Research library for option-implied risk-neutral density estimation'
+type: software
+authors:
+  - family-names: Arias
+    given-names: Alexander
+    email: aleexariasg@gmail.com
+repository-code: 'https://github.com/aleexarias/qmath'
+url: 'https://qmath.readthedocs.io'
+abstract: |
+  qmath is a research library for estimating risk-neutral probability densities
+  from option market data. It provides tools for Breeden-Litzenberger density
+  recovery, arbitrage-free surface fitting, and comprehensive validation.
+keywords:
+  - quantitative-finance
+  - options
+  - density-estimation
+  - risk-neutral
+license: BSD-3-Clause
+version: 0.1.0.dev0
