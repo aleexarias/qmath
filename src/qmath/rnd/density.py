@@ -46,7 +46,7 @@ class RiskNeutralDensity:
         self.discount = discount
 
         # Normalize density to integrate to 1
-        area_val: float = float(np.trapz(self.density, self.strikes))
+        area_val: float = float(np.trapezoid(self.density, self.strikes))
         if area_val > 0:
             self.density = self.density / area_val
 
@@ -119,7 +119,7 @@ class RiskNeutralDensity:
         float
             E[S_T | S_0] = forward.
         """
-        mean_computed = np.trapz(self.strikes * self.density, self.strikes)
+        mean_computed = np.trapezoid(self.strikes * self.density, self.strikes)
         return float(mean_computed)
 
     def variance(self) -> float:
@@ -131,7 +131,7 @@ class RiskNeutralDensity:
             Var[S_T | S_0].
         """
         mean_val = self.mean()
-        second_moment: float = float(np.trapz(self.strikes**2 * self.density, self.strikes))
+        second_moment: float = float(np.trapezoid(self.strikes**2 * self.density, self.strikes))
         return float(second_moment - mean_val * mean_val)
 
     def skewness(self) -> float:
@@ -150,7 +150,7 @@ class RiskNeutralDensity:
             return 0.0
 
         third_moment: float = float(
-            np.trapz((self.strikes - mean_val) ** 3 * self.density, self.strikes)
+            np.trapezoid((self.strikes - mean_val) ** 3 * self.density, self.strikes)
         )
         return float(third_moment / (std**3))
 

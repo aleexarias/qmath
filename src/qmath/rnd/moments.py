@@ -64,12 +64,12 @@ def model_free_variance(
 
     # Integrate using trapezoidal rule
     if len(K_put) > 1:
-        variance_put = np.trapz(P_put / K_put**2, K_put)
+        variance_put = np.trapezoid(P_put / K_put**2, K_put)
     else:
         variance_put = 0.0
 
     if len(K_call) > 1:
-        variance_call = np.trapz(C_call / K_call**2, K_call)
+        variance_call = np.trapezoid(C_call / K_call**2, K_call)
     else:
         variance_call = 0.0
 
@@ -128,8 +128,8 @@ def model_free_skewness(
     C_call = call_prices[otm_call_mask]
 
     T = 1.0
-    third_moment_put = (2 / T) * np.trapz(P_put * np.log(forward / K_put) / K_put**2, K_put) / discount
-    third_moment_call = (2 / T) * np.trapz(C_call * np.log(forward / K_call) / K_call**2, K_call) / discount
+    third_moment_put = (2 / T) * np.trapezoid(P_put * np.log(forward / K_put) / K_put**2, K_put) / discount
+    third_moment_call = (2 / T) * np.trapezoid(C_call * np.log(forward / K_call) / K_call**2, K_call) / discount
 
     skewness = (third_moment_put + third_moment_call) / (var ** 1.5)
 
@@ -184,8 +184,8 @@ def model_free_kurtosis(
     C_call = call_prices[otm_call_mask]
 
     T = 1.0
-    fourth_moment_put = (2 / T) * np.trapz(P_put * (np.log(forward / K_put)) ** 2 / K_put**2, K_put) / discount
-    fourth_moment_call = (2 / T) * np.trapz(C_call * (np.log(forward / K_call)) ** 2 / K_call**2, K_call) / discount
+    fourth_moment_put = (2 / T) * np.trapezoid(P_put * (np.log(forward / K_put)) ** 2 / K_put**2, K_put) / discount
+    fourth_moment_call = (2 / T) * np.trapezoid(C_call * (np.log(forward / K_call)) ** 2 / K_call**2, K_call) / discount
 
     kurtosis = (fourth_moment_put + fourth_moment_call) / (var**2) - 3  # Excess kurtosis
 

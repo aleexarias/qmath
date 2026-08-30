@@ -44,8 +44,8 @@ def wasserstein(rnd: RiskNeutralDensity, true_rnd: RiskNeutralDensity | FloatArr
         true_density_vals = true_rnd.pdf(rnd.strikes)
 
     # Normalize both densities
-    p_norm = rnd.density / float(np.trapz(rnd.density, rnd.strikes))
-    q_norm = true_density_vals / float(np.trapz(true_density_vals, rnd.strikes))
+    p_norm = rnd.density / float(np.trapezoid(rnd.density, rnd.strikes))
+    q_norm = true_density_vals / float(np.trapezoid(true_density_vals, rnd.strikes))
 
     # Build CDFs
     from scipy.integrate import cumulative_trapezoid
@@ -94,11 +94,11 @@ def l2_distance(rnd: RiskNeutralDensity, true_rnd: RiskNeutralDensity | FloatArr
         true_density_vals = true_rnd.pdf(rnd.strikes)
 
     # Normalize
-    p_norm = rnd.density / float(np.trapz(rnd.density, rnd.strikes))
-    q_norm = true_density_vals / float(np.trapz(true_density_vals, rnd.strikes))
+    p_norm = rnd.density / float(np.trapezoid(rnd.density, rnd.strikes))
+    q_norm = true_density_vals / float(np.trapezoid(true_density_vals, rnd.strikes))
 
     diff_sq = (p_norm - q_norm) ** 2
-    l2_val: float = float(np.sqrt(np.trapz(diff_sq, rnd.strikes)))
+    l2_val: float = float(np.sqrt(np.trapezoid(diff_sq, rnd.strikes)))
 
     return l2_val
 
@@ -124,8 +124,8 @@ def ks_distance(rnd: RiskNeutralDensity, true_rnd: RiskNeutralDensity | FloatArr
         true_density_vals = true_rnd.pdf(rnd.strikes)
 
     # Normalize
-    p_norm = rnd.density / float(np.trapz(rnd.density, rnd.strikes))
-    q_norm = true_density_vals / float(np.trapz(true_density_vals, rnd.strikes))
+    p_norm = rnd.density / float(np.trapezoid(rnd.density, rnd.strikes))
+    q_norm = true_density_vals / float(np.trapezoid(true_density_vals, rnd.strikes))
 
     # CDFs
     from scipy.integrate import cumulative_trapezoid

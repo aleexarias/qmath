@@ -89,7 +89,7 @@ def graft_pareto_tail(
     density_extended = np.maximum(density_extended, 0)
 
     # Normalize to integrate to 1
-    integral = np.trapz(density_extended, strikes_extended)
+    integral = np.trapezoid(density_extended, strikes_extended)
     if integral > 0:
         density_extended /= integral
 
