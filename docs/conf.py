@@ -16,7 +16,6 @@ version = "0.1.0"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
@@ -56,18 +55,10 @@ sphinx_gallery_conf = {
 # BibTeX configuration
 bibtex_bibfiles = ["theory/references.bib"]
 
-# Intersphinx
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-}
-
 # Theme
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "github_url": "https://github.com/aleexarias/qmath",
-    "use_edit_button": True,
     "show_nav_level": 2,
 }
 
