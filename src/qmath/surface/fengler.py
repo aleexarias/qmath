@@ -1,4 +1,4 @@
-"""Fengler (2009) constrained cubic-spline surface smoother.
+"""Fengler constrained cubic-spline surface smoother.
 
 Implements arbitrage-free smoothing via constrained quadratic programming
 on the call price surface, ensuring monotonicity and convexity automatically.
@@ -20,11 +20,12 @@ __all__ = ["FenglerSmoother"]
 
 
 class FenglerSmoother(Smoother):
-    r"""Arbitrage-free constrained cubic-spline smoother (Fengler 2009).
+    r"""Arbitrage-free constrained cubic-spline smoother.
 
-    Fits a cubic spline to call prices with convexity, monotonicity, and slope
-    constraints via constrained optimization. Uses scipy.optimize.minimize with
-    quadratic penalty terms for the constraints.
+    Implements the smoothing of :footcite:t:`fengler_2009_arbitrage`: a cubic
+    spline fitted to call prices with convexity, monotonicity, and slope
+    constraints via constrained optimization. Uses scipy.optimize.minimize
+    with quadratic penalty terms for the constraints.
 
     Parameters
     ----------
@@ -37,16 +38,15 @@ class FenglerSmoother(Smoother):
 
     Notes
     -----
-    We use scipy.optimize.minimize with SLSQP method because it directly handles
-    nonlinear inequality constraints (monotonicity, convexity) without requiring
-    complex constraint matrix formulations. Alternatives like cvxpy would require
-    reformulating as a DCP problem, which is less flexible for spline constraints.
+    We use scipy.optimize.minimize with SLSQP method because it directly
+    handles nonlinear inequality constraints (monotonicity, convexity)
+    without requiring complex constraint matrix formulations. Alternatives
+    like cvxpy would require reformulating as a DCP problem, which is less
+    flexible for spline constraints.
 
     References
     ----------
-    Fengler, M. R. (2009).
-    Arbitrage-free smoothing of the implied volatility surface.
-    *International Journal of Theoretical and Applied Finance*, 12(4), 461-485.
+    .. footbibliography::
     """
 
     def __init__(
@@ -63,7 +63,9 @@ class FenglerSmoother(Smoother):
         self.strikes_fit_: FloatArray | None = None
         self.prices_fit_: FloatArray | None = None
 
-    def fit(self, chain: "OptionChain", forward: float, discount: float) -> "FenglerSmoother":
+    def fit(
+        self, chain: "OptionChain", forward: float, discount: float
+    ) -> "FenglerSmoother":
         r"""Fit constrained cubic spline to call price data.
 
         Parameters
@@ -85,10 +87,8 @@ class FenglerSmoother(Smoother):
         self.strikes_fit_ = K
         self.prices_fit_ = C_mid
 
-        # Initial spline (unsmoothed)
         initial_prices = C_mid.copy()
 
-        # Fit smoothed prices via constrained optimization
         result = minimize(
             self._objective,
             initial_prices,
@@ -96,8 +96,16 @@ class FenglerSmoother(Smoother):
             method="SLSQP",
             bounds=[(0.0, np.inf) for _ in range(len(K))],
             constraints=[
-                {"type": "ineq", "fun": self._monotonicity_constraint, "args": (K,)},
-                {"type": "ineq", "fun": self._convexity_constraint, "args": (K,)},
+                {
+                    "type": "ineq",
+                    "fun": self._monotonicity_constraint,
+                    "args": (K,),
+                },
+                {
+                    "type": "ineq",
+                    "fun": self._convexity_constraint,
+                    "args": (K,),
+                },
             ],
             options={"ftol": self.tol, "maxiter": 1000},
         )
@@ -105,7 +113,10 @@ class FenglerSmoother(Smoother):
         if not result.success:
             import warnings
 
-            warnings.warn(f"Optimization did not converge: {result.message}", stacklevel=2)
+            warnings.warn(
+                f"Optimization did not converge: {result.message}",
+                stacklevel=2,
+            )
 
         smoothed_prices = result.x
         self.spline_ = CubicSpline(K, smoothed_prices, bc_type="natural")
@@ -133,13 +144,12 @@ class FenglerSmoother(Smoother):
         result: FloatArray = np.maximum(prices_eval, 0)
         return result.astype(np.float64)
 
-    def _objective(self, prices: FloatArray, K: FloatArray, C_mid: FloatArray) -> float:
+    def _objective(
+        self, prices: FloatArray, K: FloatArray, C_mid: FloatArray
+    ) -> float:
         r"""Objective: fit data + smoothness penalty."""
-        # Data fidelity
         fidelity: float = float(np.sum((prices - C_mid) ** 2))
 
-        # Smoothness: second-derivative penalty (roughness)
-        # Approximate using finite differences
         h = np.diff(K)
         if len(prices) > 2:
             second_diff = np.diff(prices, n=2)
@@ -149,29 +159,29 @@ class FenglerSmoother(Smoother):
 
         return float(fidelity + self.lambda_ * roughness)
 
-    def _monotonicity_constraint(self, prices: FloatArray, K: FloatArray) -> FloatArray:
+    def _monotonicity_constraint(
+        self, prices: FloatArray, K: FloatArray
+    ) -> FloatArray:
         r"""Constraint: call price must be decreasing in strike.
 
-        Returns values >= 0 for feasibility.
+        Returns values :math:`\geq 0` for feasibility.
         """
-        # dC/dK <= 0 (call prices decrease with strike)
-        # Approximate: C(K_i) - C(K_{i+1}) >= 0
         dC = np.diff(prices)
         dK_vals = np.diff(K)
         result: FloatArray = -dC / dK_vals
         return result.astype(np.float64)
 
-    def _convexity_constraint(self, prices: FloatArray, K: FloatArray) -> FloatArray:
+    def _convexity_constraint(
+        self, prices: FloatArray, K: FloatArray
+    ) -> FloatArray:
         r"""Constraint: call price must be convex in strike.
 
-        Returns values >= 0 for feasibility.
+        Returns values :math:`\geq 0` for feasibility.
         """
-        # d²C/dK² >= 0 (call prices are convex)
         h = np.diff(K)
         if len(prices) <= 2:
             return np.array([0.0], dtype=np.float64)
 
-        # Second differences (approximation of d²C/dK²)
         second_diff = np.diff(prices, n=2)
         second_deriv: FloatArray = second_diff / (h[:-1] ** 2)
 

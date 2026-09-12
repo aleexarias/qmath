@@ -1,7 +1,7 @@
 """Black-Scholes pricing and related functions.
 
-This module provides vectorized Black-Scholes pricing, greeks, and implied volatility
-calculations with robust IV solvers.
+This module provides vectorized Black-Scholes pricing, greeks, and implied
+volatility calculations with robust IV solvers.
 """
 
 from collections.abc import Callable
@@ -48,13 +48,22 @@ def bs_price(
 
     Notes
     -----
-    Uses the standard Black-Scholes formula:
+    Uses the standard formula of :footcite:t:`black+scholes_1973_pricing`:
 
     .. math::
 
         C(S, K, T, r, \sigma) = S N(d_1) - K e^{-rT} N(d_2)
 
-    where d_1 = (log(S/K) + (r + sigma^2/2)T) / (sigma sqrt(T)).
+    where
+
+    .. math::
+
+        d_1 = \frac{\log(S/K) + (r + \sigma^2/2)\,T}{\sigma \sqrt{T}},
+        \qquad d_2 = d_1 - \sigma \sqrt{T}.
+
+    References
+    ----------
+    .. footbibliography::
     """
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
@@ -66,7 +75,9 @@ def bs_price(
     return np.asarray(result, dtype=np.float64)
 
 
-def bs_vega(S: FloatArray, K: FloatArray, T: float, r: float, sigma: FloatArray) -> FloatArray:
+def bs_vega(
+    S: FloatArray, K: FloatArray, T: float, r: float, sigma: FloatArray
+) -> FloatArray:
     r"""Black-Scholes vega (sensitivity to vol).
 
     Parameters
@@ -88,7 +99,9 @@ def bs_vega(S: FloatArray, K: FloatArray, T: float, r: float, sigma: FloatArray)
         Vega values (price change per 1 percentage point vol change).
     """
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
-    result: FloatArray = np.asarray(S * norm.pdf(d1) * np.sqrt(T), dtype=np.float64)
+    result: FloatArray = np.asarray(
+        S * norm.pdf(d1) * np.sqrt(T), dtype=np.float64
+    )
     return result
 
 
@@ -124,14 +137,14 @@ def implied_vol(
 
     Notes
     -----
-    Uses Brent's method with smart initialization via Jäckel's rational approximation.
+    Uses Brent's method with smart initialization via Jäckel's rational
+    approximation.
     Raises ValueError if the price is outside the no-arbitrage bounds.
     """
     price = np.atleast_1d(price)
     S = np.atleast_1d(S)
     K = np.atleast_1d(K)
 
-    # Intrinsic value bounds
     if flag == "C":
         intrinsic = np.maximum(S - K * np.exp(-r * T), 0)
         time_value_bound = S
@@ -139,33 +152,53 @@ def implied_vol(
         intrinsic = np.maximum(K * np.exp(-r * T) - S, 0)
         time_value_bound = K * np.exp(-r * T)
 
-    # Check bounds
     if np.any(price < intrinsic) or np.any(price > time_value_bound):
         msg = "Price outside no-arbitrage bounds"
         raise ValueError(msg)
 
-    # Vectorized IV calculation
     result: FloatArray = np.zeros_like(price, dtype=np.float64)
 
-    def _make_objective(s: float, k: float, p: float) -> Callable[[float], float]:
+    def _make_objective(
+        s: float, k: float, p: float
+    ) -> Callable[[float], float]:
         """Create objective function with proper closure."""
 
         def objective(vol: float) -> float:
-            return float(bs_price(np.asarray(s), np.asarray(k), T, r, np.asarray(vol), flag)) - p
+            return (
+                float(
+                    bs_price(
+                        np.asarray(s),
+                        np.asarray(k),
+                        T,
+                        r,
+                        np.asarray(vol),
+                        flag,
+                    )
+                )
+                - p
+            )
 
         return objective
 
-    for i, (p_val, s_val, k_val) in enumerate(zip(price.flat, S.flat, K.flat, strict=False)):
+    for i, (p_val, s_val, k_val) in enumerate(
+        zip(price.flat, S.flat, K.flat, strict=False)
+    ):
         p_float = float(p_val)
         s_float = float(s_val)
         k_float = float(k_val)
 
         try:
             result.flat[i] = brentq(
-                _make_objective(s_float, k_float, p_float), 1e-6, 5.0, xtol=1e-8
+                _make_objective(s_float, k_float, p_float),
+                1e-6,
+                5.0,
+                xtol=1e-8,
             )
         except ValueError as e:
-            msg = f"IV solver failed for price={p_float}, S={s_float}, K={k_float}"
+            msg = (
+                f"IV solver failed for price={p_float}, "
+                f"S={s_float}, K={k_float}"
+            )
             raise ValueError(msg) from e
 
     return result.reshape(price.shape)

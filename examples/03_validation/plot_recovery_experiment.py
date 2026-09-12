@@ -55,8 +55,12 @@ for n_strikes in n_strikes_list:
             df = np.exp(-chain.rate * chain.T)
 
             try:
-                smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
-                density = breeden_litzenberger(smoother, forward=fwd, discount=df)
+                smoother = FenglerSmoother(lambda_=1e-3).fit(
+                    chain, forward=fwd, discount=df
+                )
+                density = breeden_litzenberger(
+                    smoother, forward=fwd, discount=df
+                )
 
                 # Compute errors
                 w_err = wasserstein(density, chain.true_density)
@@ -68,20 +72,26 @@ for n_strikes in n_strikes_list:
                 ks_errors.append(ks_err)
             except Exception as e:
                 # Skip failed fits
-                print(f"    Trial failed (n={n_strikes}, noise={noise_bps}): {e}")
+                print(
+                    f"    Trial failed (n={n_strikes}, noise={noise_bps}): {e}"
+                )
                 continue
 
         # Average results
         if w_errors:
-            results["wasserstein"]["noise"][n_strikes].append(np.mean(w_errors))
+            results["wasserstein"]["noise"][n_strikes].append(
+                np.mean(w_errors)
+            )
             results["l2"]["noise"][n_strikes].append(np.mean(l2_errors))
             results["ks"]["noise"][n_strikes].append(np.mean(ks_errors))
 
-            results["wasserstein"]["strikes"][n_strikes].append(np.std(w_errors))
+            results["wasserstein"]["strikes"][n_strikes].append(
+                np.std(w_errors)
+            )
             results["l2"]["strikes"][n_strikes].append(np.std(l2_errors))
             results["ks"]["strikes"][n_strikes].append(np.std(ks_errors))
 
-print("  Experiment complete!")
+print("  Experiment complete")
 
 # Plot results
 fig, axes = plt.subplots(1, 3, figsize=(14, 4))
@@ -93,7 +103,12 @@ for ax, metric, title in zip(axes, metrics, titles):
     for n_strikes in n_strikes_list:
         errors = results[metric]["noise"][n_strikes]
         if errors:
-            ax.plot(noise_levels[: len(errors)], errors, marker="o", label=f"n={n_strikes}")
+            ax.plot(
+                noise_levels[: len(errors)],
+                errors,
+                marker="o",
+                label=f"n={n_strikes}",
+            )
 
     ax.set_xlabel("Quote Noise (bps)")
     ax.set_ylabel(f"{title}")
@@ -104,7 +119,7 @@ for ax, metric, title in zip(axes, metrics, titles):
 plt.tight_layout()
 plt.show()
 
-print("\n✓ Recovery experiment complete!")
+print("\nRecovery experiment complete")
 print("  Observations:")
 print("  - Error increases with quote noise")
 print("  - More strikes → better recovery (more information)")

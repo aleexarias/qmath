@@ -1,12 +1,13 @@
 Contributors
 =============
 
-qmath is built by the quantitative finance research community.
+qmath is built by and for the quantitative finance research community.
 
 Current Team
 ------------
 
-**Alexander Arias**
+**Alejandro Arias Gomez**
+
 - Founder and maintainer
 - Designed the core API and architecture
 
@@ -15,12 +16,18 @@ Contributing
 
 qmath welcomes contributions in many forms:
 
-- **Code**: Bug fixes, new estimators, performance improvements
-- **Documentation**: Theory explanations, examples, tutorials
-- **Testing**: Unit tests, property tests, edge case discovery
-- **Reviews**: Code review, feedback on designs
+- **Code**: bug fixes, new model families and estimators, performance
+  improvements
+- **Documentation**: theory explanations, examples, tutorials
+- **Testing**: unit tests, property tests, edge case discovery
+- **Reviews**: code review, feedback on designs
 
-See CONTRIBUTING.md for the contribution workflow.
+New model families are especially welcome. Because every fitted object shares
+the same :meth:`~qmath.surface.Smoother.fit` /
+:meth:`~qmath.surface.Smoother.predict` contract, a new pricer, smoother or
+estimator plugs into the existing pipelines and validation tooling without
+changes elsewhere. See ``CONTRIBUTING.md`` for the workflow and
+:doc:`development` for the quality bar.
 
 Citation
 --------
@@ -29,22 +36,9 @@ If you use qmath in your research, please cite:
 
 .. code-block:: bibtex
 
-   @software{arias2024qmath,
-     author = {Arias, Alexander},
-     title = {qmath: Research library for option-implied risk-neutral density estimation},
-     year = {2024},
+   @software{ariasgomez_2026_qmath,
+     author = {Arias Gomez, Alejandro},
+     title = {qmath: A research library for quantitative finance},
+     year = {2026},
      url = {https://github.com/aleexarias/qmath}
    }
-
-Acknowledgments
----------------
-
-qmath follows the design and conventions of `scikit-fda
-<https://github.com/GAA-UAM/scikit-fda>`_, an excellent example of
-a scientific Python package.
-
-References to foundational work:
-
-- Breeden & Litzenberger (1978): The option-implied density formula
-- Fengler (2009): Arbitrage-free spline smoothing
-- Gatheral (2006): Practical volatility surface methods

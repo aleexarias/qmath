@@ -12,10 +12,11 @@ Branch Model
   Squash-merge back to main via PR.
 
 All branches require:
-- ✓ Tests (tests.yml passes)
-- ✓ Lint (ruff check passes)
-- ✓ Type checking (mypy --strict passes)
-- ✓ Docs build (docs.yml passes)
+
+- Tests (tests.yml passes)
+- Lint (ruff check passes)
+- Type checking (mypy --strict passes)
+- Docs build (docs.yml passes)
 
 Commit Convention
 -----------------
@@ -76,7 +77,8 @@ Testing Requirements
 
 Every numerical function gets:
 
-1. **Unit tests** against known reference values or independently verified results
+1. **Unit tests** against known reference values or independently verified
+   results
 2. **Property tests** (via hypothesis) for invariants
 3. **Integration tests** in the recovery pipeline
 
@@ -124,11 +126,14 @@ Write numpydoc docstrings on all public functions/classes:
 
 .. code-block:: python
 
-   def density_estimation(chain: OptionChain, smoothness: float) -> RiskNeutralDensity:
+   def density_estimation(
+       chain: OptionChain, smoothness: float
+   ) -> RiskNeutralDensity:
        """Extract risk-neutral density from option chain.
 
        Fits an arbitrage-free surface using constrained cubic splines,
-       then applies the Breeden-Litzenberger formula to extract density.
+       then applies the formula of
+       :footcite:t:`breeden+litzenberger_1978_prices` to extract density.
 
        Parameters
        ----------
@@ -144,9 +149,7 @@ Write numpydoc docstrings on all public functions/classes:
 
        References
        ----------
-       Breeden, D. T., & Litzenberger, R. H. (1978).
-       Prices of state-contingent claims implicit in option prices.
-       Journal of Business, 51(4), 621-651.
+       .. footbibliography::
 
        Examples
        --------
@@ -155,14 +158,6 @@ Write numpydoc docstrings on all public functions/classes:
        >>> density = density_estimation(chain, smoothness=0.001)
        >>> print(density.mean())  # Should be ~forward price
        """
-
-Release Process
----------------
-
-1. Update CHANGELOG.md with version and changes
-2. Tag the release: `git tag vX.Y.Z`
-3. Push tag: `git push origin vX.Y.Z`
-4. GitHub Actions builds and publishes to PyPI (via trusted publishing)
 
 Versioning
 ----------
@@ -173,7 +168,32 @@ Semantic versioning: MAJOR.MINOR.PATCH
 - **MINOR**: New features (backward compatible)
 - **PATCH**: Bug fixes
 
-Version is single-sourced in `src/qmath/__init__.py` via hatch's version hook.
+The version is single-sourced in ``src/qmath/__init__.py`` as ``__version__``
+(currently |release|). Everything else derives from it:
+
+- **Distribution metadata**: ``pyproject.toml`` declares
+  ``dynamic = ["version"]`` and ``[tool.hatch.version]`` reads that line,
+  so wheels and sdists pick it up at build time.
+- **Documentation**: ``docs/conf.py`` imports ``qmath.__version__``, which
+  Sphinx exposes as the ``|release|`` and ``|version|`` substitutions and
+  renders into the footer of every page.
+
+``CITATION.cff`` is the one exception: it is static metadata read by GitHub and
+citation managers, so it cannot derive the version and must be bumped by hand.
+
+To bump the version:
+
+1. Edit ``__version__`` in ``src/qmath/__init__.py``
+2. Edit ``version:`` in ``CITATION.cff`` to match
+
+Release Process
+---------------
+
+1. Bump the version as above
+2. Update CHANGELOG.md with version and changes
+3. Tag the release: ``git tag vX.Y.Z`` (must match ``__version__``)
+4. Push tag: ``git push origin vX.Y.Z``
+5. GitHub Actions builds and publishes to PyPI (via trusted publishing)
 
 Performance
 -----------
@@ -189,4 +209,5 @@ For C++ acceleration plans, see `cpp/README.md`.
 Questions?
 ----------
 
-See CLAUDE.md for conventions and the Contributing Guidelines (CONTRIBUTING.md).
+See CLAUDE.md for conventions and the Contributing Guidelines
+(CONTRIBUTING.md).

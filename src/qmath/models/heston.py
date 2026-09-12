@@ -24,7 +24,10 @@ def heston_cf(
     sigma_v: float,
     rho: float,
 ) -> np.ndarray:
-    r"""Heston characteristic function using Albrecher et al. formulation.
+    r"""Characteristic function of the Heston model.
+
+    Evaluates the characteristic function of the log-price under the
+    stochastic volatility model of :footcite:t:`heston_1993_closed`.
 
     Parameters
     ----------
@@ -52,16 +55,22 @@ def heston_cf(
     Returns
     -------
     ndarray
-        Complex-valued characteristic function phi(u) = E[exp(i*u*log(S_T/K))].
+        Complex-valued characteristic function
+        :math:`\phi(u) = \mathbb{E}[\exp(i u \log(S_T/K))]`.
 
     Notes
     -----
-    Uses the formulation of Albrecher, Mayer, Schoutens, and Tichy (2007)
-    with the "little trap" correction to handle the discontinuity at u=i/2.
-    """
-    x = np.log(S / K)  # log-moneyness
+    Uses the formulation of
+    :footcite:t:`albrecher+mayer+schoutens+tistaert_2007_little` with the
+    "little trap" correction to handle the discontinuity at
+    :math:`u = i/2`.
 
-    # Heston parameters
+    References
+    ----------
+    .. footbibliography::
+    """
+    x = np.log(S / K)
+
     lambda_ = kappa + 1j * rho * sigma_v * u
     gamma = np.sqrt(sigma_v**2 * (u**2 + 1j * u) + lambda_**2)
     d = 2 * gamma + (lambda_ + gamma)
@@ -69,12 +78,12 @@ def heston_cf(
     alpha = vbar * kappa / (sigma_v**2)
     beta = (lambda_ + gamma) / sigma_v**2
 
-    # Log characteristic function
     log_cf = (
         1j * u * x
         + 1j * u * r * T
         + alpha * T * np.log(2 * gamma / (lambda_ + gamma))
-        + (2 * alpha * np.log(1 - beta * (1 - np.exp(-gamma * T)) / d)) / sigma_v**2
+        + (2 * alpha * np.log(1 - beta * (1 - np.exp(-gamma * T)) / d))
+        / sigma_v**2
     )
 
     # Handle the "little trap" at u = i/2 (corresponds to vega at ATM)
@@ -99,6 +108,9 @@ def cos_price(
     n_terms: int = 256,
 ) -> FloatArray:
     r"""Price European options using the Fourier-Cosine (COS) method.
+
+    Implements the COS expansion of :footcite:t:`fang+oosterlee_2008_novel`
+    for the Heston model.
 
     Parameters
     ----------
@@ -132,15 +144,20 @@ def cos_price(
 
     References
     ----------
-    Fang, F., & Oosterlee, C. W. (2008).
-    A novel pricing method for European options based on Fourier-cosine series expansions.
-    *SIAM Journal on Scientific Computing*, 31(2), 826-848.
+    .. footbibliography::
     """
     df = np.exp(-r * T)
 
     # Integration limits (Fang-Oosterlee heuristic)
-    c1 = r * T + (rho * sigma_v * kappa - 0.5 * sigma_v**2) * (1 - np.exp(-kappa * T)) / kappa
-    c2 = v0 * (1 - np.exp(-kappa * T)) / kappa + vbar * (T - (1 - np.exp(-kappa * T)) / kappa)
+    c1 = (
+        r * T
+        + (rho * sigma_v * kappa - 0.5 * sigma_v**2)
+        * (1 - np.exp(-kappa * T))
+        / kappa
+    )
+    c2 = v0 * (1 - np.exp(-kappa * T)) / kappa + vbar * (
+        T - (1 - np.exp(-kappa * T)) / kappa
+    )
     c4 = c2 + c1**2
     a = c1 - 4 * np.sqrt(c4)
     b = c1 + 4 * np.sqrt(c4)
@@ -148,27 +165,40 @@ def cos_price(
     k = np.arange(n_terms, dtype=np.float64)
     u_k = k * np.pi / (b - a)
 
-    # Compute characteristic function at u_k for each strike
-    x = np.log(S / K)  # log-moneyness
+    x = np.log(S / K)
 
-    # COS series summation
     chi = np.zeros_like(K, dtype=np.complex128)
     psi = np.zeros_like(K, dtype=np.complex128)
 
     for j, k_val in enumerate(k):
-        # CF evaluated at frequencies u_k
         cf_val = heston_cf(
-            np.full_like(K, u_k[j], dtype=np.float64), S, K, T, r, v0, vbar, kappa, sigma_v, rho
+            np.full_like(K, u_k[j], dtype=np.float64),
+            S,
+            K,
+            T,
+            r,
+            v0,
+            vbar,
+            kappa,
+            sigma_v,
+            rho,
         )
         real_cf = np.real(cf_val)
         imag_cf = np.imag(cf_val)
 
-        chi += np.exp(1j * u_k[j] * a) * real_cf * np.cos(k_val * np.pi * (x - a) / (b - a))
+        chi += (
+            np.exp(1j * u_k[j] * a)
+            * real_cf
+            * np.cos(k_val * np.pi * (x - a) / (b - a))
+        )
 
         if k_val > 0:
-            psi += np.exp(1j * u_k[j] * a) * imag_cf * np.sin(k_val * np.pi * (x - a) / (b - a))
+            psi += (
+                np.exp(1j * u_k[j] * a)
+                * imag_cf
+                * np.sin(k_val * np.pi * (x - a) / (b - a))
+            )
 
-    # Option pricing
     if flag.upper() == "C":
         price = S * (0.5 * chi) - df * K * (0.5 * chi - psi)
     else:
@@ -191,6 +221,9 @@ def cos_density(
     n_terms: int = 256,
 ) -> FloatArray:
     r"""Risk-neutral density via Heston COS method.
+
+    Recovers the density from the Heston characteristic function with
+    the cosine expansion of :footcite:t:`fang+oosterlee_2008_novel`.
 
     Parameters
     ----------
@@ -218,29 +251,37 @@ def cos_density(
     Returns
     -------
     FloatArray
-        Risk-neutral density q(S_T | S_0 = spot) at strikes.
+        Risk-neutral density :math:`q(S_T \mid S_0 = \text{spot})` at
+        strikes.
+
+    References
+    ----------
+    .. footbibliography::
     """
     df = np.exp(-r * T)
 
-    # Integration limits
-    c1 = r * T + (rho * sigma_v * kappa - 0.5 * sigma_v**2) * (1 - np.exp(-kappa * T)) / kappa
-    c2 = v0 * (1 - np.exp(-kappa * T)) / kappa + vbar * (T - (1 - np.exp(-kappa * T)) / kappa)
+    # Integration limits (Fang-Oosterlee heuristic)
+    c1 = (
+        r * T
+        + (rho * sigma_v * kappa - 0.5 * sigma_v**2)
+        * (1 - np.exp(-kappa * T))
+        / kappa
+    )
+    c2 = v0 * (1 - np.exp(-kappa * T)) / kappa + vbar * (
+        T - (1 - np.exp(-kappa * T)) / kappa
+    )
     c4 = c2 + c1**2
     a = c1 - 4 * np.sqrt(c4)
     b = c1 + 4 * np.sqrt(c4)
 
-    # Fourier frequencies
     k = np.arange(n_terms, dtype=np.float64)
     u_k = k * np.pi / (b - a)
 
-    # Log returns relative to the interval
     x = np.log(strikes / spot)
 
-    # Density via inverse Fourier (cosine series)
     density = np.zeros_like(strikes, dtype=np.float64)
 
     for j, k_val in enumerate(k):
-        # CF evaluated at frequency u_k[j] for each strike
         cf_val = heston_cf(
             np.full_like(strikes, u_k[j], dtype=np.float64),
             spot,

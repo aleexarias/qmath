@@ -1,7 +1,7 @@
 """
-=====================================
+============================================
 Simple Density Recovery from Synthetic Chain
-=====================================
+============================================
 
 This example demonstrates the core qmath workflow:
 generate a synthetic option chain, filter noisy quotes,
@@ -52,7 +52,9 @@ print(f"  Wasserstein distance to true density: {error:.6f}")
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
 # Left: option prices (market vs smoothed)
-axes[0].scatter(chain.strikes, chain.mid, alpha=0.6, s=30, label="Market (mid)")
+axes[0].scatter(
+    chain.strikes, chain.mid, alpha=0.6, s=30, label="Market (mid)"
+)
 smooth_prices = smoother.predict(chain.strikes)
 axes[0].plot(chain.strikes, smooth_prices, "b-", linewidth=2, label="Fitted")
 axes[0].set_xlabel("Strike")
@@ -62,9 +64,19 @@ axes[0].legend()
 axes[0].grid(True, alpha=0.3)
 
 # Right: extracted density vs true density
-axes[1].plot(density.strikes, density.density, "b-", linewidth=2, label="Extracted (B-L)")
-axes[1].plot(chain.strikes, chain.true_density, "r--", linewidth=2, label="True")
-axes[1].axvline(fwd, color="gray", linestyle=":", alpha=0.7, label=f"Forward={fwd:.1f}")
+axes[1].plot(
+    density.strikes,
+    density.density,
+    "b-",
+    linewidth=2,
+    label="Extracted (B-L)",
+)
+axes[1].plot(
+    chain.strikes, chain.true_density, "r--", linewidth=2, label="True"
+)
+axes[1].axvline(
+    fwd, color="gray", linestyle=":", alpha=0.7, label=f"Forward={fwd:.1f}"
+)
 axes[1].set_xlabel("Price (Strike)")
 axes[1].set_ylabel("Density")
 axes[1].set_title("Risk-Neutral Density Recovery")
@@ -74,4 +86,4 @@ axes[1].grid(True, alpha=0.3)
 plt.tight_layout()
 plt.show()
 
-print("\n✓ Example complete!")
+print("\nExample complete")

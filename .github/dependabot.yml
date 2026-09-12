@@ -1,12 +1,16 @@
+# Only GitHub Actions are kept up to date automatically. Python dependencies
+# are deliberately excluded: qmath is a library, and Dependabot's only move
+# for a pyproject.toml without a lockfile is to raise the minimum versions,
+# which narrows who can install the package. CI installs the latest releases
+# on every run, so new versions are already tested against.
+#
+# Update PRs target develop, the integration branch, and are tested there.
+# They reach main when develop is merged. Security updates always target the
+# default branch; that is GitHub's behaviour and cannot be configured here.
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"

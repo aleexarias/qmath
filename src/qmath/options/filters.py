@@ -32,13 +32,14 @@ def filter_chain(
     Notes
     -----
     Removes strikes where:
+
     - bid < min_bid (zero or stale bids)
     - ask/bid > max_bid_ask_ratio (too wide)
     - ask - bid < min_spread (too tight, possibly arb)
     """
     mask = (
         (chain.bid >= min_bid)
-        & (chain.ask / chain.bid <= max_bid_ask_ratio)
+        & (chain.ask <= max_bid_ask_ratio * chain.bid)
         & (chain.spread >= min_spread)
     )
 
@@ -50,5 +51,7 @@ def filter_chain(
         spot=chain.spot,
         rate=chain.rate,
         dividend_yield=chain.dividend_yield,
-        true_density=chain.true_density[mask] if chain.true_density is not None else None,
+        true_density=chain.true_density[mask]
+        if chain.true_density is not None
+        else None,
     )

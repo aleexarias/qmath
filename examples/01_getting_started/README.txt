@@ -2,4 +2,5 @@
 Getting Started
 ================
 
-Basic examples demonstrating the core workflow for option-implied density estimation.
+Basic examples introducing the qmath estimator API, worked through the
+option-implied density recovery pipeline.

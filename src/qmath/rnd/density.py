@@ -17,8 +17,8 @@ __all__ = ["RiskNeutralDensity", "breeden_litzenberger"]
 class RiskNeutralDensity:
     r"""Risk-neutral probability density of future spot price.
 
-    Encapsulates the extracted density with methods for evaluation (pdf, cdf, quantile)
-    and properties (moments).
+    Encapsulates the extracted density with methods for evaluation (pdf, cdf,
+    quantile) and properties (moments).
 
     Parameters
     ----------
@@ -45,15 +45,19 @@ class RiskNeutralDensity:
         self.forward = forward
         self.discount = discount
 
-        # Normalize density to integrate to 1
         area_val: float = float(np.trapezoid(self.density, self.strikes))
         if area_val > 0:
             self.density = self.density / area_val
 
-        # Build CDF via cumulative integration
-        self.cdf_vals = cumulative_trapezoid(self.density, self.strikes, initial=0)
+        self.cdf_vals = cumulative_trapezoid(
+            self.density, self.strikes, initial=0
+        )
         self._cdf_interp = interp1d(
-            self.strikes, self.cdf_vals, kind="cubic", bounds_error=False, fill_value=(0, 1)
+            self.strikes,
+            self.cdf_vals,
+            kind="cubic",
+            bounds_error=False,
+            fill_value=(0, 1),
         )
 
     def pdf(self, strikes: FloatArray) -> FloatArray:
@@ -70,7 +74,11 @@ class RiskNeutralDensity:
             Density values (non-negative, integrate to 1).
         """
         pdf_interp = interp1d(
-            self.strikes, self.density, kind="cubic", bounds_error=False, fill_value=0
+            self.strikes,
+            self.density,
+            kind="cubic",
+            bounds_error=False,
+            fill_value=0,
         )
         result: FloatArray = np.maximum(pdf_interp(strikes), 0)
         return result.astype(np.float64)
@@ -106,7 +114,11 @@ class RiskNeutralDensity:
         """
         p = np.atleast_1d(p)
         quantile_interp = interp1d(
-            self.cdf_vals, self.strikes, kind="cubic", bounds_error=False, fill_value="extrapolate"
+            self.cdf_vals,
+            self.strikes,
+            kind="cubic",
+            bounds_error=False,
+            fill_value="extrapolate",
         )
         result: FloatArray = quantile_interp(p)
         return result.astype(np.float64)
@@ -117,7 +129,7 @@ class RiskNeutralDensity:
         Returns
         -------
         float
-            E[S_T | S_0] = forward.
+            :math:`\mathbb{E}[S_T \mid S_0]`, the forward price.
         """
         mean_computed = np.trapezoid(self.strikes * self.density, self.strikes)
         return float(mean_computed)
@@ -128,10 +140,12 @@ class RiskNeutralDensity:
         Returns
         -------
         float
-            Var[S_T | S_0].
+            :math:`\mathrm{Var}[S_T \mid S_0]`.
         """
         mean_val = self.mean()
-        second_moment: float = float(np.trapezoid(self.strikes**2 * self.density, self.strikes))
+        second_moment: float = float(
+            np.trapezoid(self.strikes**2 * self.density, self.strikes)
+        )
         return float(second_moment - mean_val * mean_val)
 
     def skewness(self) -> float:
@@ -140,7 +154,8 @@ class RiskNeutralDensity:
         Returns
         -------
         float
-            (mu_3 - 3*mu_2*mu_1 + 2*mu_1^3) / sigma^3.
+            :math:`(\mu_3 - 3\mu_2\mu_1 + 2\mu_1^3) / \sigma^3`, with
+            :math:`\mu_k` the raw moments.
         """
         mean_val = self.mean()
         var = self.variance()
@@ -150,7 +165,9 @@ class RiskNeutralDensity:
             return 0.0
 
         third_moment: float = float(
-            np.trapezoid((self.strikes - mean_val) ** 3 * self.density, self.strikes)
+            np.trapezoid(
+                (self.strikes - mean_val) ** 3 * self.density, self.strikes
+            )
         )
         return float(third_moment / (std**3))
 
@@ -174,7 +191,12 @@ class RiskNeutralDensity:
             ax = ax_result
 
         ax.plot(self.strikes, self.density, "b-", linewidth=2, label="PDF")
-        ax.axvline(self.forward, color="r", linestyle="--", label=f"Forward = {self.forward:.2f}")
+        ax.axvline(
+            self.forward,
+            color="r",
+            linestyle="--",
+            label=f"Forward = {self.forward:.2f}",
+        )
         ax.set_xlabel("Strike")
         ax.set_ylabel("Density")
         ax.set_title("Risk-Neutral Density")
@@ -214,8 +236,9 @@ def breeden_litzenberger(
 
     Notes
     -----
-    The Breeden-Litzenberger formula relates the risk-neutral density to the
-    second derivative of call prices with respect to strike:
+    The formula of :footcite:t:`breeden+litzenberger_1978_prices` relates
+    the risk-neutral density to the second derivative of call prices with
+    respect to strike:
 
     .. math::
 
@@ -226,9 +249,7 @@ def breeden_litzenberger(
 
     References
     ----------
-    Breeden, D. T., & Litzenberger, R. H. (1978).
-    Prices of state-contingent claims implicit in option prices.
-    *Journal of Business*, 51(4), 621-651.
+    .. footbibliography::
     """
     from qmath.surface.fengler import FenglerSmoother
 
@@ -240,17 +261,14 @@ def breeden_litzenberger(
         msg = "Smoother must be fitted first"
         raise ValueError(msg)
 
-    # Evaluation grid (use fitted strikes with some extra points)
     strikes = smoother.strikes_fit_
     if strikes is None:
         msg = "Smoother has no fitted strikes"
         raise ValueError(msg)
 
-    # Compute second derivative analytically from cubic spline
     second_deriv_fn = smoother.spline_.derivative(nu=2)
     second_deriv = second_deriv_fn(strikes)
 
-    # Breeden-Litzenberger: q(K) = e^{rT} * d²C/dK²
     density_vals: FloatArray = np.maximum(second_deriv / discount, 0)
 
     return RiskNeutralDensity(strikes, density_vals, forward, discount)

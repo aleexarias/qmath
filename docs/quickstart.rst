@@ -1,22 +1,29 @@
 Quick Start
 ===========
 
-This guide walks through the basic workflow of density estimation using qmath.
+This guide walks through one complete qmath workflow end to end: recovering a
+risk-neutral density from an option chain. It is a good introduction to the
+conventions every module follows.
 
 The Pipeline
 ------------
 
-The typical qmath workflow has four steps:
+This particular workflow has four steps:
 
 1. **Generate or load** an option chain
 2. **Filter** for liquidity and data quality
 3. **Fit** an arbitrage-free surface
 4. **Extract** the risk-neutral density
 
+Steps 3 and 4 use objects that follow the standard qmath estimator contract,
+``fit(data, **params) -> self`` then ``predict(data) -> result``, so
+alternative smoothers and estimators drop into the same script unchanged.
+
 Step 1: Generate a Synthetic Chain
 -----------------------------------
 
-For this example, we'll use a synthetic chain to know the ground truth:
+For this example, we'll use :func:`~qmath.datasets.synthetic_heston_chain`
+so that the ground truth is known:
 
 .. code-block:: python
 
@@ -31,16 +38,21 @@ For this example, we'll use a synthetic chain to know the ground truth:
    )
    print(f"Generated {len(chain)} strikes")
 
-The chain includes:
-- `strikes`: the strike prices
-- `bid`, `ask`: quoted prices
-- `mid`: (bid + ask) / 2
-- `true_density`: the known ground-truth density (for validation)
+The resulting :class:`~qmath.options.OptionChain` includes:
+
+- :attr:`~qmath.options.OptionChain.strikes`: the strike prices
+- :attr:`~qmath.options.OptionChain.bid`,
+  :attr:`~qmath.options.OptionChain.ask`: quoted prices
+- :attr:`~qmath.options.OptionChain.mid`:
+  :math:`(\mathrm{bid} + \mathrm{ask}) / 2`
+- :attr:`~qmath.options.OptionChain.true_density`: the known
+  ground-truth density (for validation)
 
 Step 2: Filter Low-Liquidity Quotes
 ------------------------------------
 
-Real market data is noisy. Filter for liquid strikes:
+Real market data is noisy. :func:`~qmath.options.filter_chain` keeps only
+the liquid strikes:
 
 .. code-block:: python
 
@@ -58,8 +70,10 @@ Real market data is noisy. Filter for liquid strikes:
 Step 3: Fit an Arbitrage-Free Surface
 --------------------------------------
 
-Use the Fengler smoother to fit a cubic-spline surface with automatic
-no-arbitrage constraints (monotonicity, convexity):
+Use :class:`~qmath.surface.FenglerSmoother` to fit a cubic-spline surface
+with automatic no-arbitrage constraints (monotonicity, convexity). Any
+other :class:`~qmath.surface.Smoother`, such as
+:class:`~qmath.surface.SVISmoother`, is a drop-in replacement here:
 
 .. code-block:: python
 
@@ -84,8 +98,8 @@ no-arbitrage constraints (monotonicity, convexity):
 Step 4: Extract Risk-Neutral Density
 -------------------------------------
 
-Apply the Breeden-Litzenberger formula to extract density from the smoothed
-surface:
+Apply :func:`~qmath.rnd.breeden_litzenberger` to extract the density from
+the smoothed surface:
 
 .. code-block:: python
 
@@ -110,7 +124,8 @@ surface:
 Validation: Compare to Ground Truth
 ------------------------------------
 
-For synthetic data, we can compute recovery error:
+For synthetic data, :func:`~qmath.validation.wasserstein` measures the
+recovery error against the known density:
 
 .. code-block:: python
 
@@ -120,8 +135,8 @@ For synthetic data, we can compute recovery error:
    error = wasserstein(density, chain.true_density)
    print(f"Recovery error (Wasserstein): {error:.6f}")
 
-For real data, use density properties (mean = forward, positive, integrating to 1)
-as sanity checks.
+For real data, use the :class:`~qmath.rnd.RiskNeutralDensity` properties
+(mean equal to the forward, positive, integrating to 1) as sanity checks.
 
 Visualization
 -------------
@@ -137,7 +152,12 @@ Plot the results:
    # Left: fitted surface vs market data
    ax = axes[0]
    ax.scatter(chain.strikes, chain.mid, alpha=0.5, s=20, label="Market")
-   ax.plot(chain.strikes, smoother.predict(chain.strikes), "b-", label="Fitted")
+   ax.plot(
+       chain.strikes,
+       smoother.predict(chain.strikes),
+       "b-",
+       label="Fitted",
+   )
    ax.set_xlabel("Strike")
    ax.set_ylabel("Call Price")
    ax.set_title("Arbitrage-Free Fit")

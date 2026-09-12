@@ -6,8 +6,16 @@ from qmath._typing import BoolArray, FloatArray
 
 __all__ = ["check_monotonicity", "check_convexity", "check_bounds"]
 
+# Constrained optimisers satisfy inequality constraints only to their
+# convergence tolerance (SLSQP: ftol 1e-8), leaving residuals of order
+# 1e-10 on fitted surfaces. Genuine arbitrage violations are orders of
+# magnitude larger.
+DEFAULT_ATOL = 1e-8
 
-def check_monotonicity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray, float]:
+
+def check_monotonicity(
+    strikes: FloatArray, prices: FloatArray, atol: float = DEFAULT_ATOL
+) -> tuple[BoolArray, float]:
     r"""Check call prices are monotonically decreasing in strike.
 
     Parameters
@@ -16,22 +24,28 @@ def check_monotonicity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArr
         Strike prices.
     prices : FloatArray
         Call prices.
+    atol : float, default=1e-8
+        Absolute tolerance. An increase :math:`C(K_{i+1}) - C(K_i)` no
+        larger than ``atol`` is treated as numerical noise, not a
+        violation.
 
     Returns
     -------
     is_monotone : BoolArray
         Boolean array indicating monotonicity at each adjacent pair.
     violation_count : float
-        Number of violations (negative differences).
+        Number of violations (positive differences beyond ``atol``).
     """
     diffs = np.diff(prices)
-    is_monotone = diffs <= 0
-    violation_count = float(np.sum(diffs > 0))
+    is_monotone = diffs <= atol
+    violation_count = float(np.sum(~is_monotone))
 
     return is_monotone, violation_count
 
 
-def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray, float]:
+def check_convexity(
+    strikes: FloatArray, prices: FloatArray, atol: float = DEFAULT_ATOL
+) -> tuple[BoolArray, float]:
     r"""Check call prices are convex in strike.
 
     Parameters
@@ -40,6 +54,9 @@ def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray,
         Strike prices.
     prices : FloatArray
         Call prices.
+    atol : float, default=1e-8
+        Absolute tolerance on the scaled second difference. Values above
+        ``-atol`` are treated as numerical noise, not a violation.
 
     Returns
     -------
@@ -51,7 +68,10 @@ def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray,
     Notes
     -----
     Convexity is checked via the discrete second difference:
-    C(K_{i+1}) - 2*C(K_i) + C(K_{i-1}) >= 0
+
+    .. math::
+
+        C(K_{i+1}) - 2\,C(K_i) + C(K_{i-1}) \geq 0
     """
     if len(strikes) < 3:
         return np.array([True] * (len(strikes) - 1)), 0.0
@@ -61,8 +81,8 @@ def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray,
 
     second_diff = np.diff(prices, n=2) / np.maximum(h_left * h_right, 1e-10)
 
-    is_convex = second_diff >= 0
-    violation_count = float(np.sum(second_diff < 0))
+    is_convex = second_diff >= -atol
+    violation_count = float(np.sum(~is_convex))
 
     return is_convex, violation_count
 
@@ -81,7 +101,7 @@ def check_bounds(
     spot : float
         Spot price.
     discount : float
-        Discount factor exp(-rT).
+        Discount factor :math:`e^{-rT}`.
 
     Returns
     -------
@@ -92,9 +112,10 @@ def check_bounds(
 
     Notes
     -----
-    Call price C(K) must satisfy:
-    - Lower bound: C(K) >= max(S - K*DF, 0)
-    - Upper bound: C(K) <= S
+    Call price :math:`C(K)` must satisfy:
+
+    - Lower bound: :math:`C(K) \geq \max(S - K \cdot \mathrm{DF}, 0)`
+    - Upper bound: :math:`C(K) \leq S`
     """
     intrinsic = np.maximum(spot - strikes * discount, 0)
     upper_bound = spot

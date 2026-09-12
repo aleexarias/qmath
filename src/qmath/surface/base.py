@@ -1,6 +1,7 @@
 """Base class for surface smoothers.
 
-Provides sklearn-like fit/predict interface for smoothing option price surfaces.
+Provides sklearn-like fit/predict interface for smoothing option price
+surfaces.
 """
 
 from abc import ABC, abstractmethod
@@ -19,7 +20,9 @@ class Smoother(ABC):
     """
 
     @abstractmethod
-    def fit(self, chain: OptionChain, forward: float, discount: float) -> "Smoother":
+    def fit(
+        self, chain: OptionChain, forward: float, discount: float
+    ) -> "Smoother":
         r"""Fit the smoother to the option chain data.
 
         Parameters
