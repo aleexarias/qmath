@@ -4,11 +4,12 @@ Installation
 Requirements
 ------------
 
-- Python 3.11+
-- NumPy >= 1.24
+- Python 3.12+
+- NumPy >= 2.0
 - SciPy >= 1.11
 - Pandas >= 2.0
 - Matplotlib >= 3.8
+- Requests >= 2.31
 
 Installation from Source
 -------------------------
@@ -37,6 +38,10 @@ Test that the package imports correctly:
    import qmath
    print(qmath.__version__)
 
+This prints |release| for the checkout these docs were built from.
+``qmath.__version__`` is the project's single source of truth for the version:
+the distribution metadata and this documentation both derive from it.
+
 Run the test suite:
 
 .. code-block:: bash
@@ -46,8 +51,13 @@ Run the test suite:
 Build Documentation
 --------------------
 
+The documentation is not hosted yet, so build it from the repository:
+
 .. code-block:: bash
 
+   pip install -e ".[docs]"
    cd docs
    make html
    # Open _build/html/index.html in a browser
+
+This renders the API reference, the theory pages, and the example gallery.

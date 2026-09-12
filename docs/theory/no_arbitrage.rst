@@ -23,7 +23,8 @@ For a fixed expiration :math:`T`, call prices :math:`C(K)` must satisfy:
 a higher strike :math:`K'`. A rational investor would never pay more for
 a lower payoff.
 
-**In qmath**: Enforced by FenglerSmoother constraints.
+**In qmath**: Enforced by :class:`~qmath.surface.FenglerSmoother`
+constraints and checked by :func:`~qmath.validation.check_monotonicity`.
 
 **2. Convexity (Convex in Strike)**
 
@@ -41,10 +42,12 @@ Equivalently, the second derivative is non-negative:
 **Why**: Convexity follows from the optionality of the payoff. A call is "more
 convex" the further OTM it is (higher gamma).
 
-**Consequence for density**: Since :math:`q(K) = e^{rT} \frac{\partial^2 C}{\partial K^2}`,
-convexity ensures the risk-neutral density is non-negative.
+**Consequence for density**: Since
+:math:`q(K) = e^{rT} \frac{\partial^2 C}{\partial K^2}`, convexity ensures
+the risk-neutral density is non-negative.
 
-**In qmath**: Enforced by FenglerSmoother constraints.
+**In qmath**: Enforced by :class:`~qmath.surface.FenglerSmoother`
+constraints and checked by :func:`~qmath.validation.check_convexity`.
 
 **3. No-Arbitrage Bounds**
 
@@ -62,7 +65,7 @@ Upper bound (spot price):
 
 where :math:`q` is the dividend yield.
 
-**In qmath**: Checked by `qmath.validation.arbitrage.check_bounds()`.
+**In qmath**: Checked by :func:`~qmath.validation.check_bounds`.
 
 **4. Put-Call Parity**
 
@@ -75,7 +78,7 @@ where :math:`P(K)` is the put price.
 **Why**: A European call minus put replicates a forward. The forward price
 is deterministic, so :math:`C - P` must equal the forward payoff.
 
-**In qmath**: Used by `qmath.options.forward.infer_forward()` to estimate
+**In qmath**: Used by :func:`~qmath.options.infer_forward` to estimate
 the forward price and discount factor.
 
 Implementation in qmath
@@ -95,13 +98,15 @@ Implementation in qmath
    is_conv, conv_viol = check_convexity(strikes, prices)
    in_bounds, bound_viol = check_bounds(strikes, prices, spot, discount)
 
-**Enforcing constraints** (via Fengler smoother):
+**Enforcing constraints** (via :class:`~qmath.surface.FenglerSmoother`):
 
 .. code-block:: python
 
    from qmath.surface import FenglerSmoother
 
-   smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+   smoother = FenglerSmoother(lambda_=1e-3).fit(
+       chain, forward=fwd, discount=df
+   )
    smooth_prices = smoother.predict(strikes)
 
    # These prices automatically satisfy monotonicity and convexity
@@ -109,15 +114,16 @@ Implementation in qmath
    is_conv, _ = check_convexity(strikes, smooth_prices)
    assert np.all(is_mono) and np.all(is_conv)
 
-Fengler Method (2009)
----------------------
+Fengler Method
+--------------
 
-The Fengler smoother fits a cubic-spline surface by solving a constrained
-optimization problem:
+The smoother of :cite:t:`fengler_2009_arbitrage` fits a cubic-spline
+surface by solving a constrained optimization problem:
 
 .. math::
 
-   \min_C \left\| C(\text{strikes}) - C_{\text{market}} \right\|^2 + \lambda R(C)
+   \min_C \left\| C(\text{strikes}) - C_{\text{market}} \right\|^2
+   + \lambda R(C)
 
 subject to:
 
@@ -132,20 +138,13 @@ The parameter :math:`\lambda` controls the trade-off:
 - Small :math:`\lambda`: close to market data, less smoothing
 - Large :math:`\lambda`: smoother surface, larger deviation from data
 
-**In qmath**: Implemented in `qmath.surface.FenglerSmoother` using scipy's
-constrained optimization.
+**In qmath**: Implemented in :class:`~qmath.surface.FenglerSmoother` using
+scipy's constrained optimization.
 
-References
-----------
+Further Reading
+---------------
 
-Fengler, M. R. (2009).
-*Arbitrage-free smoothing of the implied volatility surface.*
-International Journal of Theoretical and Applied Finance, 12(4), 461-485.
-
-Gatheral, J. (2006).
-*The Volatility Surface: A Practitioner's Guide.*
-Wiley Finance.
-
-Bondarenko, O. (2014).
-*Why are puts so expensive? Quarterly Journal of Finance, 4(3), 1-46.*
-[On the relationship between convexity and smile]
+:cite:t:`gatheral_2006_volatility` covers the practical side of volatility
+surface construction, and :cite:t:`bondarenko_2014_why` studies the
+pricing of index put options, whose apparent expensiveness is what the
+smile encodes. Full entries are on the :doc:`../references` page.

@@ -4,8 +4,9 @@ Breeden-Litzenberger Formula
 Introduction
 ------------
 
-The Breeden-Litzenberger (1978) result shows how to recover the risk-neutral
-probability density from European option prices without any model assumption.
+The result of :cite:t:`breeden+litzenberger_1978_prices` shows how to
+recover the risk-neutral probability density from European option prices
+without any model assumption.
 
 The Formula
 -----------
@@ -18,12 +19,13 @@ For European call options expiring at time :math:`T`, the risk-neutral density
    q(K) = e^{rT} \frac{\partial^2 C(K)}{\partial K^2}
 
 where:
+
 - :math:`C(K)` is the call price as a function of strike :math:`K`
 - :math:`r` is the risk-free rate
 - :math:`T` is time to expiration
 
-**Key insight**: The density is proportional to the second derivative (convexity)
-of the call price surface.
+**Key insight**: The density is proportional to the second derivative
+(convexity) of the call price surface.
 
 Derivation Intuition
 ---------------------
@@ -63,8 +65,10 @@ Taking one more derivative:
 Implementation in qmath
 -----------------------
 
-qmath computes the second derivative analytically from fitted splines, avoiding
-numerical instability of finite differences on raw market data:
+:func:`~qmath.rnd.breeden_litzenberger` computes the second derivative
+analytically from the fitted spline of a
+:class:`~qmath.surface.FenglerSmoother`, avoiding the numerical
+instability of finite differences on raw market data:
 
 .. code-block:: python
 
@@ -72,7 +76,9 @@ numerical instability of finite differences on raw market data:
    from qmath.rnd import breeden_litzenberger
 
    # Fit smooth surface
-   smoother = FenglerSmoother(lambda_=1e-4).fit(chain, forward=fwd, discount=df)
+   smoother = FenglerSmoother(lambda_=1e-4).fit(
+       chain, forward=fwd, discount=df
+   )
 
    # Extract density via B-L formula (using analytic derivatives)
    density = breeden_litzenberger(smoother, forward=fwd, discount=df)
@@ -88,23 +94,22 @@ Applying B-L directly to raw market quotes gives:
 
 This is numerically unstable because:
 
-1. **Noise amplification**: Tiny errors in call prices get squared in the derivative
-2. **Arbitrage violations**: Raw data may not be perfectly arbitrage-free, leading to negative densities
+1. **Noise amplification**: Tiny errors in call prices get squared in the
+   derivative
+2. **Arbitrage violations**: Raw data may not be perfectly arbitrage-free,
+   leading to negative densities
 3. **Oscillation**: Finite differences create spurious wiggles
 
-By fitting a smooth arbitrage-free surface first (e.g., via constrained splines),
-we get:
+By fitting a smooth arbitrage-free surface first (e.g., via constrained
+splines), we get:
 
 - **Stability**: The smooth spline has continuous second derivatives
 - **Arbitrage-free**: Convexity and monotonicity are enforced
 - **Interpretability**: The result is a clean, parametric density
 
-References
-----------
+Further Reading
+---------------
 
-Breeden, D. T., & Litzenberger, R. H. (1978).
-*Prices of state-contingent claims implicit in option prices.*
-Journal of Business, 51(4), 621-651.
-
-Gatheral, J. (2006). *The Volatility Surface: A Practitioner's Guide.*
-Wiley Finance. [Chapter on B-L formula and numerical issues]
+:cite:t:`gatheral_2006_volatility` devotes a chapter to the formula and
+its numerical pitfalls. Full entries are on the :doc:`../references`
+page.

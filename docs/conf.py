@@ -6,12 +6,16 @@ import sys
 # Add source directory to path
 sys.path.insert(0, os.path.abspath("../src"))
 
-project = "qmath"
-copyright = "2024, Alexander Arias"
-author = "Alexander Arias"
+from qmath import __version__  # noqa: E402
 
-release = "0.1.0.dev0"
-version = "0.1.0"
+project = "qmath"
+copyright = "2026, Alejandro Arias Gomez"
+author = "Alejandro Arias Gomez"
+
+# Derived from qmath.__version__; do not hardcode. Sphinx exposes these as the
+# |release| and |version| substitutions, usable in any page.
+release = __version__
+version = ".".join(release.split(".")[:2])
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -60,6 +64,9 @@ html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "github_url": "https://github.com/aleexarias/qmath",
     "show_nav_level": 2,
+    # _templates/version.html renders `release` into the footer of every page.
+    "footer_start": ["version", "copyright"],
+    "footer_end": ["last-updated"],
 }
 
 html_static_path = ["_static"]

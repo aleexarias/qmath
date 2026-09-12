@@ -1,7 +1,10 @@
 Theory
 ======
 
-Mathematical foundations of option-implied density estimation.
+Mathematical foundations of the methods implemented in qmath.
+
+Option-Implied Densities
+------------------------
 
 .. toctree::
    :maxdepth: 1
