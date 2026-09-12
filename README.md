@@ -1,20 +1,67 @@
 # qmath
 
-Research library for estimating risk-neutral probability densities from option market data. Specializes in the Breeden-Litzenberger framework with emphasis on arbitrage-free surface fitting and robust density recovery from noisy quotes.
+qmath is a research library for quantitative finance. It provides tested
+implementations of pricing models, volatility-surface fits, and option-implied
+estimators behind a small and consistent API, so that methods from different
+families can be composed and compared on the same data.
+
+The library is designed to grow. Each area of the codebase is an extension
+point with a documented base class, and new model families are added as
+subpackages.
+
+## Design Principles
+
+- **A common estimator API.** Everything that is fitted to data follows the
+  same sklearn-like contract: `fit(data, **params) -> self`, then
+  `predict(data) -> result`. Swapping one smoother, pricer, or estimator for
+  another is a one-line change.
+- **Arbitrage awareness.** Fitting routines that can enforce no-arbitrage
+  constraints do so, and `qmath.validation` provides independent checks so that
+  any output can be audited.
+- **Reference implementations first.** Every algorithm exists as readable,
+  vectorized NumPy/SciPy. `qmath.backend` is a dispatch layer so that
+  accelerated C++ kernels can be introduced later without changing any public
+  API.
+- **Typed and tested.** `mypy --strict` passes over the whole source tree, and
+  every numerical function has unit tests against reference values plus
+  property-based tests for its invariants.
+
+## Package Layout
+
+| Subpackage | Role | Currently available |
+| --- | --- | --- |
+| `qmath.models` | Analytic and semi-analytic pricers | Black-Scholes prices, greeks and implied vol; Heston characteristic function with COS pricing and density |
+| `qmath.surface` | Implied-volatility and call-price surface fitting | `FenglerSmoother` (constrained cubic spline), `SVISmoother` (raw SVI) |
+| `qmath.rnd` | Risk-neutral density recovery and properties | Breeden-Litzenberger extraction, Pareto tail grafting, model-free moments |
+| `qmath.options` | Market data structures and preprocessing | `OptionChain`, liquidity filtering, forward/discount inference |
+| `qmath.datasets` | Chain generation and loading | Synthetic Heston chains with known ground truth, Deribit loader |
+| `qmath.validation` | Quality assessment | Monotonicity, convexity and bound checks; Wasserstein, L2 and KS distances |
+| `qmath.viz` | Plotting helpers | Placeholder for shared plotting utilities |
+| `qmath.backend` | Kernel dispatch | Pure-Python reference implementations |
 
 ## Installation
 
+Clone the repository and install in editable mode:
+
 ```bash
-pip install qmath
+git clone https://github.com/aleexarias/qmath.git
+cd qmath
+pip install -e .
 ```
 
-For development:
+With development and documentation dependencies:
 
 ```bash
 pip install -e ".[dev,docs]"
 ```
 
+Requires Python 3.12 or newer.
+
 ## Quick Start
+
+The example below runs one end-to-end workflow: generate a chain with a known
+ground-truth density, fit an arbitrage-free surface, and recover the density
+from it.
 
 ```python
 from qmath.datasets import synthetic_heston_chain
@@ -43,28 +90,54 @@ plt.show()
 
 ## Documentation
 
-Full documentation available at [qmath.readthedocs.io](https://qmath.readthedocs.io).
+The documentation is not hosted yet. Build it from this repository:
 
-See the [gallery](https://qmath.readthedocs.io/auto_examples) for complete examples.
+```bash
+pip install -e ".[docs]"
+cd docs
+make html
+# Open docs/_build/html/index.html in a browser
+```
 
-## What This Is (and Isn't)
+The build renders the API reference, the theory pages, and the example gallery.
+The gallery sources live in [examples/](examples/) and run as ordinary scripts
+if you prefer not to build the docs.
 
-**qmath is a research library** for studying option-implied density estimation. It provides
-tools for academic research, backtesting strategies, and validating numerical methods.
+## Scope
 
-**It is not a trading system.** It does not provide market data connectors, real-time
-pricing, or execution. Use it for research and analysis, not for live trading without
-additional infrastructure.
+**qmath is a research library.** It is intended for academic work, method
+development, backtesting, and validating numerical implementations against
+references.
+
+**It is not a trading system.** It does not provide real-time pricing, order
+management, or execution. The Deribit loader fetches public historical chains
+for research; it is not market-data infrastructure.
+
+## Extending qmath
+
+New model families are welcome. The pattern is:
+
+1. Add or reuse a base class in `qmath/<module>/base.py` defining the
+   `fit`/`predict` contract for that family.
+2. Implement the subclass in `qmath/<module>/<name>.py` with complete type
+   hints and a numpydoc docstring citing its source paper.
+3. Add unit tests against a reference, property tests for its invariants,
+   and an integration test in the end-to-end pipeline.
+4. Add a gallery example, an API page under `docs/modules/`, and a CHANGELOG
+   entry.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow and
+[CLAUDE.md](CLAUDE.md) for project conventions.
 
 ## Citation
 
 If you use qmath in published research, please cite:
 
 ```bibtex
-@software{arias2024qmath,
-  author = {Arias, Alexander},
-  title = {qmath: Research library for option-implied risk-neutral density estimation},
-  year = {2024},
+@software{ariasgomez_2026_qmath,
+  author = {Arias Gomez, Alejandro},
+  title = {qmath: A research library for quantitative finance},
+  year = {2026},
   url = {https://github.com/aleexarias/qmath}
 }
 ```
@@ -75,4 +148,5 @@ BSD-3-Clause. See [LICENSE](LICENSE).
 
 ## Contributing
 
-We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+guidelines.

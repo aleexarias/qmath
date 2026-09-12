@@ -18,7 +18,10 @@ def graft_pareto_tail(
     density: FloatArray,
     threshold_pct: float = 10,
 ) -> tuple[FloatArray, FloatArray]:
-    r"""Graft generalized Pareto tails onto body density (Figlewski 2010).
+    r"""Graft generalized Pareto tails onto body density.
+
+    Follows the tail-completion approach of
+    :footcite:t:`figlewski_2010_estimating`.
 
     Parameters
     ----------
@@ -46,49 +49,53 @@ def graft_pareto_tail(
         f(x) = \frac{1}{\sigma} (1 + \xi x/\sigma)^{-1-1/\xi}
 
     For each tail (left and right), we:
+
     1. Fit GPD to the outermost `threshold_pct` of the body
     2. Smooth the junction via piecewise linear interpolation
     3. Extend the grid to cover the full domain
+
+    References
+    ----------
+    .. footbibliography::
     """
     n = len(strikes)
     n_tail = max(2, int(np.ceil(n * threshold_pct / 100)))
 
-    # Left tail: fit to lowest strikes
-    left_strikes = strikes[:n_tail]
     left_density = density[:n_tail]
-
-    # Right tail: fit to highest strikes
-    right_strikes = strikes[-n_tail:]
     right_density = density[-n_tail:]
 
-    # Extended grid
     left_ext = np.linspace(strikes[0] * 0.7, strikes[0], 20)
     right_ext = np.linspace(strikes[-1], strikes[-1] * 1.3, 20)
     strikes_extended = np.concatenate([left_ext, strikes, right_ext])
 
-    # Fit GPD to each tail
-    # Left tail: model the negative exceedances
     try:
         shape_left, loc_left, scale_left = genpareto.fit(-left_density)
-        left_tail_vals = genpareto.pdf(-(-left_ext), shape_left, loc_left, scale_left)
+        left_tail_vals = genpareto.pdf(
+            left_ext, shape_left, loc_left, scale_left
+        )
         left_tail_vals = np.abs(left_tail_vals)
     except Exception:
         # Fallback: exponential tail
-        left_tail_vals = left_density[0] * np.exp(-np.abs(left_ext - strikes[0]) / (strikes[0] * 0.1))
+        left_tail_vals = left_density[0] * np.exp(
+            -np.abs(left_ext - strikes[0]) / (strikes[0] * 0.1)
+        )
 
-    # Right tail
     try:
         shape_right, loc_right, scale_right = genpareto.fit(right_density)
-        right_tail_vals = genpareto.pdf(right_ext - strikes[-1], shape_right, loc_right, scale_right)
+        right_tail_vals = genpareto.pdf(
+            right_ext - strikes[-1], shape_right, loc_right, scale_right
+        )
     except Exception:
         # Fallback: exponential tail
-        right_tail_vals = right_density[-1] * np.exp(-(right_ext - strikes[-1]) / (strikes[-1] * 0.1))
+        right_tail_vals = right_density[-1] * np.exp(
+            -(right_ext - strikes[-1]) / (strikes[-1] * 0.1)
+        )
 
-    # Concatenate and normalize
-    density_extended = np.concatenate([left_tail_vals, density, right_tail_vals])
+    density_extended = np.concatenate(
+        [left_tail_vals, density, right_tail_vals]
+    )
     density_extended = np.maximum(density_extended, 0)
 
-    # Normalize to integrate to 1
     integral = np.trapezoid(density_extended, strikes_extended)
     if integral > 0:
         density_extended /= integral

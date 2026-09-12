@@ -17,10 +17,11 @@ class TestRiskNeutralDensity:
         strikes = np.linspace(80, 120, 50)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2))
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
-        # Should integrate to 1
-        integral = np.trapz(rnd.density, rnd.strikes)
+        integral = np.trapezoid(rnd.density, rnd.strikes)
         np.testing.assert_allclose(integral, 1.0, rtol=1e-2)
 
     def test_density_pdf_evaluation(self) -> None:
@@ -28,9 +29,10 @@ class TestRiskNeutralDensity:
         strikes = np.linspace(80, 120, 50)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2))
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
-        # PDF should be non-negative
         pdf_vals = rnd.pdf(np.array([90.0, 100.0, 110.0]))
         assert np.all(pdf_vals >= 0)
 
@@ -39,13 +41,13 @@ class TestRiskNeutralDensity:
         strikes = np.linspace(80, 120, 50)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2))
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
-        # CDF should be in [0, 1]
         cdf_vals = rnd.cdf(np.array([80.0, 100.0, 120.0]))
         assert np.all((cdf_vals >= 0) & (cdf_vals <= 1))
 
-        # CDF should be increasing
         assert cdf_vals[1] > cdf_vals[0]
         assert cdf_vals[2] > cdf_vals[1]
 
@@ -54,9 +56,10 @@ class TestRiskNeutralDensity:
         strikes = np.linspace(80, 120, 50)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2))
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
-        # Quantiles should be in strike range
         q = rnd.quantile(np.array([0.25, 0.5, 0.75]))
         assert np.all((q >= strikes.min()) & (q <= strikes.max()))
 
@@ -65,31 +68,30 @@ class TestRiskNeutralDensity:
         strikes = np.linspace(80, 120, 100)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2))
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
         mean = rnd.mean()
         var = rnd.variance()
         skew = rnd.skewness()
 
-        # Mean should be close to 100 (center of density)
         assert 95 < mean < 105
 
-        # Variance should be positive
         assert var > 0
 
-        # Skewness should be close to 0 for symmetric density
         assert abs(skew) < 0.1
 
     def test_density_non_negative(self) -> None:
         """Test that density remains non-negative."""
         strikes = np.linspace(80, 120, 50)
-        # Create density with some negative values (should be corrected)
         density = np.exp(-((strikes - 100) ** 2) / (2 * 15**2)) - 0.001
 
-        rnd = RiskNeutralDensity(strikes, density, forward=100.0, discount=0.99)
+        rnd = RiskNeutralDensity(
+            strikes, density, forward=100.0, discount=0.99
+        )
 
-        # All density values should be non-negative after initialization
-        assert np.all(rnd.density >= -1e-10)  # Allow small numerical error
+        assert np.all(rnd.density >= -1e-10)
 
 
 class TestBreedenLitzenberger:
@@ -103,11 +105,12 @@ class TestBreedenLitzenberger:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
         density = breeden_litzenberger(smoother, forward=fwd, discount=df)
 
-        # Density should integrate to 1
-        integral = np.trapz(density.density, density.strikes)
+        integral = np.trapezoid(density.density, density.strikes)
         np.testing.assert_allclose(integral, 1.0, rtol=1e-2)
 
     def test_bl_density_non_negative(self) -> None:
@@ -118,10 +121,11 @@ class TestBreedenLitzenberger:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
         density = breeden_litzenberger(smoother, forward=fwd, discount=df)
 
-        # All density values should be non-negative
         assert np.all(density.density >= 0)
 
     def test_bl_density_mean(self) -> None:
@@ -132,10 +136,11 @@ class TestBreedenLitzenberger:
         fwd = chain.spot * np.exp(chain.rate * chain.T)
         df = np.exp(-chain.rate * chain.T)
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
         density = breeden_litzenberger(smoother, forward=fwd, discount=df)
 
-        # Mean should be close to forward (within ~10%)
         mean = density.mean()
         assert abs(mean - fwd) / fwd < 0.1
 

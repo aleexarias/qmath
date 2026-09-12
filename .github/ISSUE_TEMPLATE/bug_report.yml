@@ -6,7 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting a bug! Please provide the following information.
+        Thank you for reporting a bug! Please provide the following
+        information.
 
   - type: textarea
     id: description
@@ -43,7 +44,7 @@ body:
       label: Environment
       description: |
         - OS (e.g., Ubuntu 22.04, macOS 13.1, Windows 11)
-        - Python version (e.g., 3.11, 3.12)
+        - Python version (e.g., 3.12, 3.13)
         - qmath version
         - NumPy/SciPy versions
       value: |

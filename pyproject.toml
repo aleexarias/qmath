@@ -4,30 +4,36 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qmath"
-version = "0.1.0.dev0"
-description = "Research library for option-implied risk-neutral density estimation"
+dynamic = ["version"]
+description = "A research library for quantitative finance"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = {text = "BSD-3-Clause"}
 authors = [
-    {name = "Alexander Arias", email = "aleexariasg@gmail.com"},
+    {name = "Alejandro Arias Gomez", email = "aleexariasg@gmail.com"},
 ]
-keywords = ["quantitative-finance", "options", "density-estimation"]
+keywords = [
+    "quantitative-finance",
+    "options",
+    "derivatives-pricing",
+    "volatility-surface",
+    "density-estimation",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
 ]
 
 dependencies = [
-    "numpy>=1.24",
+    "numpy>=2.0",
     "scipy>=1.11",
     "pandas>=2.0",
     "matplotlib>=3.8",
+    "requests>=2.31",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +44,7 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.1.0",
     "mypy>=1.7",
+    "types-requests>=2.31",
     "pre-commit>=3.5",
 ]
 docs = [
@@ -50,27 +57,31 @@ docs = [
 ]
 
 [project.urls]
-Documentation = "https://qmath.readthedocs.io"
+Documentation = "https://github.com/aleexarias/qmath/tree/main/docs"
 Repository = "https://github.com/aleexarias/qmath"
 Issues = "https://github.com/aleexarias/qmath/issues"
+
+[tool.hatch.version]
+path = "src/qmath/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/qmath"]
 
 [tool.ruff]
-line-length = 100
-target-version = "py311"
+line-length = 79
+target-version = "py312"
 src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PT"]
-ignore = ["E501", "N803", "N806", "N813"]  # Allow mathematical variable names (S, K, T, etc.)
+# N803/N806/N813: allow mathematical variable names (S, K, T, etc.)
+ignore = ["N803", "N806", "N813"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["qmath"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -91,6 +102,7 @@ addopts = "--strict-markers -v --tb=short"
 testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "network: needs internet access; run with QMATH_NETWORK_TESTS=1",
 ]
 
 [tool.coverage.run]

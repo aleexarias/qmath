@@ -1,12 +1,19 @@
 """
-qmath: Research library for option-implied risk-neutral density estimation.
+qmath: A research library for quantitative finance.
 
-This library provides tools for estimating risk-neutral probability densities
-from option market data using the Breeden-Litzenberger framework, with emphasis
-on arbitrage-free surface fitting and robust density recovery.
+This library provides typed, tested implementations of pricing models,
+volatility-surface fits, and option-implied estimators behind a small and
+consistent API, so that methods from different families can be composed and
+compared on the same data. Everything fitted to data follows the same
+``fit(data, **params) -> self`` / ``predict(data) -> result`` contract.
+
+The first area built out is option-implied risk-neutral density recovery:
+arbitrage-free surface fitting followed by Breeden-Litzenberger extraction.
 """
 
-__version__ = "0.1.0.dev0"
+# Single source of truth for the project version. pyproject.toml and
+# docs/conf.py derive from this line; CITATION.cff must be bumped by hand.
+__version__ = "0.1.0"
 
 from qmath.options import OptionChain, filter_chain, infer_forward
 from qmath.rnd import RiskNeutralDensity, breeden_litzenberger

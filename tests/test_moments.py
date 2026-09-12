@@ -3,7 +3,11 @@
 import numpy as np
 
 from qmath.models.black_scholes import bs_price
-from qmath.rnd.moments import model_free_kurtosis, model_free_skewness, model_free_variance
+from qmath.rnd.moments import (
+    model_free_kurtosis,
+    model_free_skewness,
+    model_free_variance,
+)
 
 
 class TestModelFreeMoments:
@@ -17,21 +21,22 @@ class TestModelFreeMoments:
         r = 0.02
         sigma = 0.2
 
-        # Synthetic prices under Black-Scholes
         call_prices = bs_price(S, K, T, r, np.full_like(K, sigma), flag="C")
         put_prices = bs_price(S, K, T, r, np.full_like(K, sigma), flag="P")
 
         forward = S * np.exp(r * T)
         discount = np.exp(-r * T)
 
-        mf_var = model_free_variance(K, call_prices, put_prices, forward, discount)
+        mf_var = model_free_variance(
+            K, call_prices, put_prices, forward, discount
+        )
 
-        # Variance should be positive
         assert mf_var > 0, "Model-free variance should be positive"
 
-        # For Black-Scholes with constant volatility, should be in reasonable range
         # BKM formula doesn't exactly equal sigma^2, so allow wider tolerance
-        assert 0.01 < mf_var < 0.10, f"Variance {mf_var} should be in reasonable range"
+        assert 0.01 < mf_var < 0.10, (
+            f"Variance {mf_var} should be in reasonable range"
+        )
 
     def test_model_free_variance_zero_prices(self) -> None:
         """Test variance with all zero prices returns zero."""
@@ -42,7 +47,9 @@ class TestModelFreeMoments:
         forward = 100.0
         discount = 0.98
 
-        mf_var = model_free_variance(K, call_prices, put_prices, forward, discount)
+        mf_var = model_free_variance(
+            K, call_prices, put_prices, forward, discount
+        )
 
         assert mf_var >= 0, "Variance should be non-negative"
 
@@ -63,9 +70,10 @@ class TestModelFreeMoments:
         forward = S * np.exp(r * T)
         discount = np.exp(-r * T)
 
-        skewness = model_free_skewness(K, call_prices, put_prices, forward, discount)
+        skewness = model_free_skewness(
+            K, call_prices, put_prices, forward, discount
+        )
 
-        # With elevated OTM put vol, skewness should be negative
         assert isinstance(skewness, float), "Skewness should be a float"
 
     def test_model_free_kurtosis_finite(self) -> None:
@@ -84,9 +92,10 @@ class TestModelFreeMoments:
         forward = S * np.exp(r * T)
         discount = np.exp(-r * T)
 
-        kurtosis = model_free_kurtosis(K, call_prices, put_prices, forward, discount)
+        kurtosis = model_free_kurtosis(
+            K, call_prices, put_prices, forward, discount
+        )
 
-        # Kurtosis should be finite and well-defined
         assert np.isfinite(kurtosis), "Kurtosis should be finite"
 
     def test_model_free_moments_consistency(self) -> None:
@@ -103,11 +112,16 @@ class TestModelFreeMoments:
         forward = S * np.exp(r * T)
         discount = np.exp(-r * T)
 
-        var = model_free_variance(K, call_prices, put_prices, forward, discount)
-        skew = model_free_skewness(K, call_prices, put_prices, forward, discount)
-        kurt = model_free_kurtosis(K, call_prices, put_prices, forward, discount)
+        var = model_free_variance(
+            K, call_prices, put_prices, forward, discount
+        )
+        skew = model_free_skewness(
+            K, call_prices, put_prices, forward, discount
+        )
+        kurt = model_free_kurtosis(
+            K, call_prices, put_prices, forward, discount
+        )
 
-        # All should be finite
         assert np.isfinite(var), "Variance should be finite"
         assert np.isfinite(skew), "Skewness should be finite"
         assert np.isfinite(kurt), "Kurtosis should be finite"
@@ -121,9 +135,12 @@ class TestModelFreeMoments:
         forward = 100.0
         discount = 0.98
 
-        skew = model_free_skewness(K, call_prices, put_prices, forward, discount)
-        kurt = model_free_kurtosis(K, call_prices, put_prices, forward, discount)
+        skew = model_free_skewness(
+            K, call_prices, put_prices, forward, discount
+        )
+        kurt = model_free_kurtosis(
+            K, call_prices, put_prices, forward, discount
+        )
 
-        # Should return zero when variance is zero
         assert skew == 0.0, "Skewness should be zero when variance is zero"
         assert kurt == 0.0, "Kurtosis should be zero when variance is zero"

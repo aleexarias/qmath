@@ -10,19 +10,19 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Ensure figures directory exists
 figures_dir = os.path.join(os.path.dirname(__file__), "..", "figures")
 os.makedirs(figures_dir, exist_ok=True)
 
-# Set up matplotlib for publication
-plt.rcParams.update({
-    "font.size": 10,
-    "figure.figsize": (6, 4),
-    "figure.dpi": 300,
-    "savefig.dpi": 300,
-    "lines.linewidth": 1.5,
-    "legend.fontsize": 9,
-})
+plt.rcParams.update(
+    {
+        "font.size": 10,
+        "figure.figsize": (6, 4),
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "lines.linewidth": 1.5,
+        "legend.fontsize": 9,
+    }
+)
 
 
 def figure_1_recovery_experiment() -> None:
@@ -44,20 +44,29 @@ def figure_1_recovery_experiment() -> None:
         errors = []
 
         for noise_bps in noise_levels:
-            # Generate and recover
-            chain = synthetic_heston_chain(T=0.5, n_strikes=n_strikes, noise_bps=noise_bps, seed=42)
+            chain = synthetic_heston_chain(
+                T=0.5, n_strikes=n_strikes, noise_bps=noise_bps, seed=42
+            )
             chain = filter_chain(chain)
 
             fwd = chain.spot * np.exp(chain.rate * chain.T)
             df = np.exp(-chain.rate * chain.T)
 
-            smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+            smoother = FenglerSmoother(lambda_=1e-3).fit(
+                chain, forward=fwd, discount=df
+            )
             density = breeden_litzenberger(smoother, forward=fwd, discount=df)
 
             error = wasserstein(density, chain.true_density)
             errors.append(error)
 
-        ax.plot(noise_levels, errors, marker="o", label=f"$n={n_strikes}$", color=color)
+        ax.plot(
+            noise_levels,
+            errors,
+            marker="o",
+            label=f"$n={n_strikes}$",
+            color=color,
+        )
 
     ax.set_xlabel("Quote Noise (basis points)")
     ax.set_ylabel("Wasserstein Distance")

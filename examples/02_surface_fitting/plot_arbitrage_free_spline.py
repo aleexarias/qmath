@@ -31,7 +31,9 @@ lambdas = [1e-5, 1e-4, 1e-3]
 fits = []
 
 for lam in lambdas:
-    smoother = FenglerSmoother(lambda_=lam).fit(chain, forward=fwd, discount=df)
+    smoother = FenglerSmoother(lambda_=lam).fit(
+        chain, forward=fwd, discount=df
+    )
     prices = smoother.predict(chain.strikes)
     fits.append((smoother, prices))
 
@@ -42,7 +44,9 @@ fig, axes = plt.subplots(2, 2, figsize=(13, 10))
 ax = axes[0, 0]
 ax.scatter(chain.strikes, chain.bid, alpha=0.4, s=20, c="red", label="Bid")
 ax.scatter(chain.strikes, chain.ask, alpha=0.4, s=20, c="blue", label="Ask")
-ax.scatter(chain.strikes, chain.mid, alpha=0.6, s=30, c="black", label="Mid", zorder=5)
+ax.scatter(
+    chain.strikes, chain.mid, alpha=0.6, s=30, c="black", label="Mid", zorder=5
+)
 ax.set_xlabel("Strike")
 ax.set_ylabel("Price")
 ax.set_title("Raw Market Quotes (noisy)")
@@ -51,10 +55,14 @@ ax.grid(True, alpha=0.3)
 
 # Top right: fitted surfaces at different lambdas
 ax = axes[0, 1]
-ax.scatter(chain.strikes, chain.mid, alpha=0.3, s=30, c="gray", label="Market mid")
+ax.scatter(
+    chain.strikes, chain.mid, alpha=0.3, s=30, c="gray", label="Market mid"
+)
 colors = ["green", "blue", "red"]
 for (smoother, prices), lam, color in zip(fits, lambdas, colors):
-    ax.plot(chain.strikes, prices, linewidth=2, label=f"λ={lam:.0e}", color=color)
+    ax.plot(
+        chain.strikes, prices, linewidth=2, label=f"λ={lam:.0e}", color=color
+    )
 ax.set_xlabel("Strike")
 ax.set_ylabel("Call Price")
 ax.set_title("Fitted Surfaces (different smoothness)")
@@ -94,6 +102,9 @@ ax.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
 plt.show()
 
-print("\n✓ Fengler smoother demonstration complete!")
+print("\nFengler smoother demonstration complete")
 print("  Note: Smaller λ → less smoothing (closer to data, less violations)")
-print("        Larger λ → more smoothing (smoother surface, more violations possible)")
+print(
+    "        Larger λ → more smoothing "
+    "(smoother surface, more violations possible)"
+)

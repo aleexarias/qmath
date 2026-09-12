@@ -19,9 +19,10 @@ class TestFenglerSmoother:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
 
-        # Should be able to predict on original strikes
         prices = smoother.predict(chain.strikes)
 
         assert len(prices) == len(chain.strikes)
@@ -35,14 +36,14 @@ class TestFenglerSmoother:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
         prices = smoother.predict(chain.strikes)
 
-        # Check monotonicity
         is_monotone, violations = check_monotonicity(chain.strikes, prices)
 
-        # Should have few or no violations
-        assert violations <= 2  # Allow small numerical violations
+        assert violations <= 2
 
     def test_smoother_convexity(self) -> None:
         """Test that fitted prices are convex."""
@@ -52,14 +53,14 @@ class TestFenglerSmoother:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
         prices = smoother.predict(chain.strikes)
 
-        # Check convexity
         is_convex, violations = check_convexity(chain.strikes, prices)
 
-        # Should have few or no violations
-        assert violations <= 2  # Allow small numerical violations
+        assert violations <= 2
 
     def test_smoother_extrapolation(self) -> None:
         """Test that smoother can extrapolate beyond fitted strikes."""
@@ -69,10 +70,13 @@ class TestFenglerSmoother:
         fwd = 100.0
         df = 0.99
 
-        smoother = FenglerSmoother(lambda_=1e-3).fit(chain, forward=fwd, discount=df)
+        smoother = FenglerSmoother(lambda_=1e-3).fit(
+            chain, forward=fwd, discount=df
+        )
 
-        # Evaluate at strikes beyond the fitted range
-        new_strikes = np.array([chain.strikes.min() - 10, chain.strikes.max() + 10])
+        new_strikes = np.array(
+            [chain.strikes.min() - 10, chain.strikes.max() + 10]
+        )
         prices = smoother.predict(new_strikes)
 
         assert len(prices) == 2
@@ -86,15 +90,16 @@ class TestFenglerSmoother:
         fwd = 100.0
         df = 0.99
 
-        # Small lambda: less smoothing, closer to data
-        smoother_small = FenglerSmoother(lambda_=1e-5).fit(chain, forward=fwd, discount=df)
+        smoother_small = FenglerSmoother(lambda_=1e-5).fit(
+            chain, forward=fwd, discount=df
+        )
         prices_small = smoother_small.predict(chain.strikes)
 
-        # Large lambda: more smoothing, less oscillation
-        smoother_large = FenglerSmoother(lambda_=1e-1).fit(chain, forward=fwd, discount=df)
+        smoother_large = FenglerSmoother(lambda_=1e-1).fit(
+            chain, forward=fwd, discount=df
+        )
         prices_large = smoother_large.predict(chain.strikes)
 
-        # Large lambda should produce smoother prices (lower second derivative norm)
         second_diff_small = np.diff(prices_small, n=2)
         second_diff_large = np.diff(prices_large, n=2)
 

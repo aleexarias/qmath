@@ -1,20 +1,23 @@
 cff-version: 1.2.0
-title: 'qmath: Research library for option-implied risk-neutral density estimation'
+title: 'qmath: A research library for quantitative finance'
 type: software
 authors:
-  - family-names: Arias
-    given-names: Alexander
+  - family-names: Arias Gomez
+    given-names: Alejandro
     email: aleexariasg@gmail.com
 repository-code: 'https://github.com/aleexarias/qmath'
-url: 'https://qmath.readthedocs.io'
 abstract: |
-  qmath is a research library for estimating risk-neutral probability densities
-  from option market data. It provides tools for Breeden-Litzenberger density
-  recovery, arbitrage-free surface fitting, and comprehensive validation.
+  qmath is a research library for quantitative finance. It provides typed,
+  tested implementations of pricing models, volatility-surface fits, and
+  option-implied estimators behind a small and consistent API, so that methods
+  from different families can be composed and compared on the same data. The
+  first area built out is option-implied risk-neutral density recovery.
 keywords:
   - quantitative-finance
   - options
+  - derivatives-pricing
+  - volatility-surface
   - density-estimation
   - risk-neutral
 license: BSD-3-Clause
-version: 0.1.0.dev0
+version: 0.1.0

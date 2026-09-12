@@ -7,7 +7,9 @@ from qmath._typing import BoolArray, FloatArray
 __all__ = ["check_monotonicity", "check_convexity", "check_bounds"]
 
 
-def check_monotonicity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray, float]:
+def check_monotonicity(
+    strikes: FloatArray, prices: FloatArray
+) -> tuple[BoolArray, float]:
     r"""Check call prices are monotonically decreasing in strike.
 
     Parameters
@@ -31,7 +33,9 @@ def check_monotonicity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArr
     return is_monotone, violation_count
 
 
-def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray, float]:
+def check_convexity(
+    strikes: FloatArray, prices: FloatArray
+) -> tuple[BoolArray, float]:
     r"""Check call prices are convex in strike.
 
     Parameters
@@ -51,7 +55,10 @@ def check_convexity(strikes: FloatArray, prices: FloatArray) -> tuple[BoolArray,
     Notes
     -----
     Convexity is checked via the discrete second difference:
-    C(K_{i+1}) - 2*C(K_i) + C(K_{i-1}) >= 0
+
+    .. math::
+
+        C(K_{i+1}) - 2\,C(K_i) + C(K_{i-1}) \geq 0
     """
     if len(strikes) < 3:
         return np.array([True] * (len(strikes) - 1)), 0.0
@@ -81,7 +88,7 @@ def check_bounds(
     spot : float
         Spot price.
     discount : float
-        Discount factor exp(-rT).
+        Discount factor :math:`e^{-rT}`.
 
     Returns
     -------
@@ -92,9 +99,10 @@ def check_bounds(
 
     Notes
     -----
-    Call price C(K) must satisfy:
-    - Lower bound: C(K) >= max(S - K*DF, 0)
-    - Upper bound: C(K) <= S
+    Call price :math:`C(K)` must satisfy:
+
+    - Lower bound: :math:`C(K) \geq \max(S - K \cdot \mathrm{DF}, 0)`
+    - Upper bound: :math:`C(K) \leq S`
     """
     intrinsic = np.maximum(spot - strikes * discount, 0)
     upper_bound = spot

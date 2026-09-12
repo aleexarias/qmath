@@ -21,10 +21,8 @@ class TestBlackScholesPrice:
 
         prices = bs_price(S, K, T, r, sigma, flag="C")
 
-        # Calls should be decreasing in strike
         assert prices[0] > prices[1] > prices[2]
 
-        # Check intrinsic value bounds
         df = np.exp(-r * T)
         intrinsic = np.maximum(S - K * df, 0)
         assert np.all(prices >= intrinsic)
@@ -51,7 +49,7 @@ class TestBlackScholesPrice:
         """Test call value approaches intrinsic at expiry."""
         S = 100.0
         K = np.array([90.0, 100.0, 110.0])
-        T = 1e-6  # Very close to expiry
+        T = 1e-6
         r = 0.02
         sigma = np.array([0.2, 0.2, 0.2])
 
@@ -67,7 +65,9 @@ class TestBlackScholesPrice:
         r=st.floats(-0.05, 0.1, allow_nan=False, allow_infinity=False),
         sigma=st.floats(0.05, 1.0, allow_nan=False, allow_infinity=False),
     )
-    def test_call_monotonicity_in_spot(self, S: float, K: float, T: float, r: float, sigma: float) -> None:
+    def test_call_monotonicity_in_spot(
+        self, S: float, K: float, T: float, r: float, sigma: float
+    ) -> None:
         """Test that call price increases with spot."""
         S1 = np.asarray(S, dtype=np.float64)
         S2 = np.asarray(S * 1.01, dtype=np.float64)
@@ -77,7 +77,6 @@ class TestBlackScholesPrice:
         c1 = float(bs_price(S1, K_arr, T, r, sigma_arr, flag="C"))
         c2 = float(bs_price(S2, K_arr, T, r, sigma_arr, flag="C"))
 
-        # Monotonicity: c2 >= c1 (with small tolerance for numerical error)
         assert c2 >= c1 - 1e-10
 
     @given(
@@ -87,7 +86,9 @@ class TestBlackScholesPrice:
         r=st.floats(-0.05, 0.1, allow_nan=False, allow_infinity=False),
         sigma=st.floats(0.05, 1.0, allow_nan=False, allow_infinity=False),
     )
-    def test_call_decreasing_in_strike(self, S: float, K: float, T: float, r: float, sigma: float) -> None:
+    def test_call_decreasing_in_strike(
+        self, S: float, K: float, T: float, r: float, sigma: float
+    ) -> None:
         """Test that call price decreases with strike."""
         S_arr = np.asarray(S, dtype=np.float64)
         K1 = np.asarray(K, dtype=np.float64)
@@ -97,7 +98,6 @@ class TestBlackScholesPrice:
         c1 = float(bs_price(S_arr, K1, T, r, sigma_arr, flag="C"))
         c2 = float(bs_price(S_arr, K2, T, r, sigma_arr, flag="C"))
 
-        # Monotonicity: c1 >= c2 (with small tolerance for numerical error)
         assert c1 >= c2 - 1e-10
 
 
@@ -126,7 +126,6 @@ class TestImpliedVol:
         T = 0.5
         r = 0.02
 
-        # Create a skew: vol increases away from ATM
         moneyness = K / S
         sigma_skew = 0.15 + 0.05 * (moneyness - 1) ** 2
 
@@ -142,8 +141,9 @@ class TestImpliedVol:
         T = 0.5
         r = 0.02
 
-        # Price above intrinsic bound
         price_too_high = np.array([S + 1])
 
-        with pytest.raises(ValueError, match="Price outside no-arbitrage bounds"):
+        with pytest.raises(
+            ValueError, match="Price outside no-arbitrage bounds"
+        ):
             implied_vol(price_too_high, S, K, T, r, flag="C")
