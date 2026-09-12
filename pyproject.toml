@@ -32,7 +32,7 @@ dependencies = [
     "numpy>=2.0",
     "scipy>=1.11",
     "pandas>=2.0",
-    "matplotlib>=3.8",
+    "matplotlib>=3.11.1",
     "requests>=2.31",
 ]
 
@@ -52,7 +52,7 @@ docs = [
     "pydata-sphinx-theme>=0.14",
     "sphinx-gallery>=0.14",
     "numpydoc>=1.6",
-    "matplotlib>=3.8",
+    "matplotlib>=3.11.1",
     "sphinxcontrib-bibtex>=2.6",
 ]
 
